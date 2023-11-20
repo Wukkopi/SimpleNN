@@ -3,27 +3,33 @@
 namespace SimpleNN
 {
     [Serializable]
-    class Network
+    public class Network
     {
         private Random random;
         private List<Node>[] nodes;
         private List<Neuron> neurons;
         private int layerCount;
 
-        public Network(int[] layers, Func<float, float> activator)
+        public int NodeCount => nodes.Sum(x => x.Count);
+        public int NeuronCount => neurons.Count;
+
+        public Network(int layerCount)
         {
             random = new Random();
 
-            layerCount = layers.Length;
+            this.layerCount = layerCount;
             nodes = new List<Node>[layerCount];
 
-            for(int i = 0; i < nodes.Length; i++)
+            for (int i = 0; i < nodes.Length; i++)
             {
                 nodes[i] = new List<Node>();
             }
 
             neurons = new List<Neuron>();
+        }
 
+        public Network(int[] layers, Func<float, float> activator) : this(layers.Length)
+        {
             for(int l = 0; l < layerCount; l++)
             {
                 for (int i = 0; i < layers[l]; i++)
@@ -33,7 +39,7 @@ namespace SimpleNN
             }
         }
 
-        public void AddNode(int layerIndex, Func<float, float> activator)
+        public Node AddNode(int layerIndex, Func<float, float> activator)
         {
             Node newNode = new Node(activator);
             nodes[layerIndex].Add(newNode);
@@ -43,7 +49,10 @@ namespace SimpleNN
                 // Add neurons TO this
                 foreach (Node parent in nodes[layerIndex - 1])
                 {
-                    neurons.Add(new Neuron(parent, newNode));
+                    var neuron = new Neuron(parent, newNode);
+                    newNode.InNeurons.Add(neuron);
+                    parent.OutNeurons.Add(neuron);
+                    neurons.Add(neuron);
                 }
             }
 
@@ -52,9 +61,13 @@ namespace SimpleNN
             {
                 foreach (Node child in nodes[layerIndex + 1])
                 {
-                    neurons.Add(new Neuron(newNode, child));
+                    var neuron = new Neuron(newNode, child);
+                    newNode.OutNeurons.Add(neuron);
+                    child.InNeurons.Add(neuron);
+                    neurons.Add(neuron);
                 }
             }
+            return newNode;
         }
 
         public float[] Compute(float[] input)
@@ -72,10 +85,9 @@ namespace SimpleNN
 
             for (int i = 1; i < layerCount; i++)
             {
-                for (int j = 0; j < nodes[i].Count; j++)
+                foreach(var node in nodes[i])
                 {
-                    List<Neuron> allNeurons = neurons.FindAll(n => n.Child == nodes[i][j]);
-                    nodes[i][j].UpdateTriggerValue(allNeurons);
+                    node.UpdateTriggerValue();
                 }
             }
 

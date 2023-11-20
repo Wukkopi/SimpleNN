@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleNN
 {
-    static class ActivatorFunctions
+    public static class ActivatorFunctions
     {
         public static float Linear(float accum) => accum;
         public static float Tanh(float accum) => (float)Math.Tanh(accum);

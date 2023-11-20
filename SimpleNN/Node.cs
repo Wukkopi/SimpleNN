@@ -11,16 +11,20 @@ namespace SimpleNN
         public float TriggerValue { get; set; }
         public float ActivatorValue => Activator(TriggerValue);
         public float ErrorValue { get; set; }
+        public List<Neuron> InNeurons { get; set; }
+        public List<Neuron> OutNeurons { get; set; }
 
         public Node(Func<float, float> activator)
         {
             Activator = activator;
+            InNeurons = new List<Neuron>();
+            OutNeurons = new List<Neuron>();
         }
 
-        public void UpdateTriggerValue(List<Neuron> neurons)
+        public void UpdateTriggerValue()
         {
             TriggerValue = 0;
-            foreach (Neuron n in neurons)
+            foreach (Neuron n in InNeurons)
             {
                 TriggerValue += n.Weight * n.Parent.ActivatorValue;
             }
