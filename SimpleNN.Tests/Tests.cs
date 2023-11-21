@@ -6,28 +6,26 @@ namespace SimpleNN.Tests
         [SetUp]
         public void Setup()
         {
-            //create a known xor-nn
+            //create a valid xor-nn
             testNetwork = new Network(3);
-            
-            testNetwork.AddNode(0, ActivatorFunctions.Linear);
-            testNetwork.AddNode(0, ActivatorFunctions.Linear);
+
+            testNetwork.AddNode(0, ActivatorFunctions.ReLU);
+            testNetwork.AddNode(0, ActivatorFunctions.ReLU);
 
             Node node;
 
-            node = testNetwork.AddNode(1, ActivatorFunctions.Linear);
-            node.InNeurons[0].Weight = 0.38f;
-            node.InNeurons[1].Weight = 1.13f;
-            node.Bias = 1.18f;
+            node = testNetwork.AddNode(1, ActivatorFunctions.ReLU);
+            node.InNeurons[0].Weight = 1f;
+            node.InNeurons[1].Weight = 1f;
 
-            node = testNetwork.AddNode(1, ActivatorFunctions.Linear);
-            node.InNeurons[0].Weight = -1.08f;
-            node.InNeurons[1].Weight = -0.56f;
-            node.Bias = -0.33f;
+            node = testNetwork.AddNode(1, ActivatorFunctions.ReLU);
+            node.InNeurons[0].Weight = 1f;
+            node.InNeurons[1].Weight = 1f;
+            node.Bias = -1f;
 
-            node = testNetwork.AddNode(2, ActivatorFunctions.Linear);
-            node.InNeurons[0].Weight = -1.49f;
-            node.InNeurons[1].Weight = -0.46f;
-            node.Bias = 1.23f;
+            node = testNetwork.AddNode(2, ActivatorFunctions.ReLU);
+            node.InNeurons[0].Weight = 1f;
+            node.InNeurons[1].Weight = -2f;
         }
 
         [Test]

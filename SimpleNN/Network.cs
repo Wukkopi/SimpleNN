@@ -1,11 +1,11 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace SimpleNN
 {
     [Serializable]
     public class Network
     {
-        private Random random;
         private List<Node>[] nodes;
         private List<Neuron> neurons;
         private int layerCount;
@@ -15,8 +15,6 @@ namespace SimpleNN
 
         public Network(int layerCount)
         {
-            random = new Random();
-
             this.layerCount = layerCount;
             nodes = new List<Node>[layerCount];
 
@@ -39,11 +37,30 @@ namespace SimpleNN
             }
         }
 
-        public Node AddNode(int layerIndex, Func<float, float> activator)
+        public Neuron AddNeuron(Node child, Node parent)
+        {
+            Neuron neuron = new Neuron(parent, child);
+            neurons.Add(neuron);
+            parent.OutNeurons.Add(neuron);
+            child.InNeurons.Add(neuron);
+            return neuron;
+        }
+        public void RemoveNeuron(Neuron neuron)
+        {
+            neurons.Remove(neuron);
+            neuron.Parent.OutNeurons.Remove(neuron);
+            neuron.Child.InNeurons.Remove(neuron);
+        }
+        public Node AddNode(int layerIndex, Func<float, float> activator, bool autowire = true)
         {
             Node newNode = new Node(activator);
             nodes[layerIndex].Add(newNode);
             
+            if (!autowire)
+            {
+                return newNode;
+            }
+
             if (layerIndex > 0)
             {
                 // Add neurons TO this
@@ -104,11 +121,11 @@ namespace SimpleNN
         {
             foreach (List<Node> layer in nodes)
                 foreach (Node node in layer)
-                    node.Bias = random.NextSingle() * 2f - 1f;
+                    node.Bias = Random.Shared.NextSingle() * 2f - 1f;
 
             foreach(Neuron neuron in neurons)
             {
-                neuron.Weight = random.NextSingle() * 2f - 1f;
+                neuron.Weight = Random.Shared.NextSingle() * 2f - 1f;
             }
         }
 
@@ -118,12 +135,12 @@ namespace SimpleNN
             {
                 foreach (Node node in layer)
                 {
-                    node.Bias += (random.NextSingle() * 2f - 1f) * rate;
+                    node.Bias += (Random.Shared.NextSingle() * 2f - 1f) * rate;
                 }
             }
             foreach (Neuron neuron in neurons)
             {
-                neuron.Weight += (random.NextSingle() * 2f - 1f) * rate;
+                neuron.Weight += (Random.Shared.NextSingle() * 2f - 1f) * rate;
             }
         }
 
@@ -160,6 +177,16 @@ namespace SimpleNN
         }
         public override string ToString()
         {
+            var sb = new StringBuilder();
+            foreach (var layer in nodes)
+            {
+                sb.AppendLine("============");
+                foreach (var node in layer)
+                {
+                    
+                }
+            }
+
             return "";
         }
 

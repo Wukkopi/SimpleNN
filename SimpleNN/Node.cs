@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 
 namespace SimpleNN
@@ -6,6 +7,7 @@ namespace SimpleNN
     [Serializable]
     public class Node
     {
+        public string Id { get; private set; }
         public float Bias { get; set; }
         public Func<float, float> Activator { get; private set; }
         public float TriggerValue { get; set; }
@@ -19,6 +21,7 @@ namespace SimpleNN
             Activator = activator;
             InNeurons = new List<Neuron>();
             OutNeurons = new List<Neuron>();
+            Id = Random.Shared.Next().ToString("X");
         }
 
         public void UpdateTriggerValue()
