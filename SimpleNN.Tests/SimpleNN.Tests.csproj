@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SimpleNNTrainer\SimpleNNTrainer.csproj" />
     <ProjectReference Include="..\SimpleNN\SimpleNN.csproj" />
   </ItemGroup>
 
