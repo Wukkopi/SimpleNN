@@ -1,34 +1,44 @@
-﻿using System.Text;
+﻿using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SimpleNN
 {
-    [Serializable]
     public class Network
     {
-        private List<Node>[] nodes;
-        private List<Neuron> neurons;
-        private int layerCount;
+        public List<List<Node>> nodes { get; set; }
+        public List<Neuron> neurons { get; set; }
 
+        public int LayerCount => nodes.Count;
         public int NodeCount => nodes.Sum(x => x.Count);
         public int NeuronCount => neurons.Count;
 
-        public Network(int layerCount)
-        {
-            this.layerCount = layerCount;
-            nodes = new List<Node>[layerCount];
+        public int InputCount => nodes[0].Count;
+        public int OutputCount => nodes[LayerCount - 1].Count;
 
-            for (int i = 0; i < nodes.Length; i++)
+        private static JsonSerializerOptions serializerOptions = new JsonSerializerOptions { IncludeFields = true, ReferenceHandler = ReferenceHandler.Preserve };
+
+        public Network()
+        {
+            nodes = new List<List<Node>>();
+        }
+
+        public Network(int layerCount) : this()
+        {
+            for (int i = 0; i < layerCount; i++)
             {
-                nodes[i] = new List<Node>();
+                nodes.Add(new List<Node>());
             }
 
             neurons = new List<Neuron>();
         }
 
-        public Network(int[] layers, Func<float, float> activator) : this(layers.Length)
+        public Network(int[] layers, ActivatorType activator) : this(layers.Length)
         {
-            for(int l = 0; l < layerCount; l++)
+            for(int l = 0; l < LayerCount; l++)
             {
                 for (int i = 0; i < layers[l]; i++)
                 {
@@ -51,7 +61,7 @@ namespace SimpleNN
             neuron.Parent.OutNeurons.Remove(neuron);
             neuron.Child.InNeurons.Remove(neuron);
         }
-        public Node AddNode(int layerIndex, Func<float, float> activator, bool autowire = true)
+        public Node AddNode(int layerIndex, ActivatorType activator, bool autowire = true)
         {
             Node newNode = new Node(activator);
             nodes[layerIndex].Add(newNode);
@@ -74,7 +84,7 @@ namespace SimpleNN
             }
 
             // Add neurons FROM this
-            if (layerIndex < layerCount - 1)
+            if (layerIndex < LayerCount - 1)
             {
                 foreach (Node child in nodes[layerIndex + 1])
                 {
@@ -100,7 +110,7 @@ namespace SimpleNN
                 nodes[0][i].TriggerValue = input[i];
             }
 
-            for (int i = 1; i < layerCount; i++)
+            for (int i = 1; i < LayerCount; i++)
             {
                 foreach(var node in nodes[i])
                 {
@@ -108,10 +118,10 @@ namespace SimpleNN
                 }
             }
 
-            float[] result = new float[nodes[layerCount - 1].Count];
-            for(int i = 0; i < nodes[layerCount - 1].Count; i++)
+            float[] result = new float[nodes[LayerCount - 1].Count];
+            for(int i = 0; i < nodes[LayerCount - 1].Count; i++)
             {
-                result[i] = nodes[layerCount - 1][i].ActivatorValue;
+                result[i] = nodes[LayerCount - 1][i].ActivatorValue;
             }
 
             return result;
@@ -148,13 +158,13 @@ namespace SimpleNN
         {
             float totalError = 0f;
 
-            for (int i = layerCount - 1; i > -1; i--)
+            for (int i = LayerCount - 1; i > -1; i--)
             {
                 for (int j = 0; j < nodes[i].Count; j++)
                 {
                     Node node = nodes[i][j];
-                    node.ErrorValue = node.ActivatorValue * ActivatorFunctions.DfTanh(node.ActivatorValue) * rate;
-                    if (i < layerCount - 1)
+                    node.ErrorValue = node.ActivatorValue * ActivatorFunctions.Activate(ActivatorType.DfTanh, node.ActivatorValue) * rate;
+                    if (i < LayerCount - 1)
                     {
                         List<Neuron> allNeurons = neurons.Where(n => n.Parent == node).ToList();
                         float errorMultiplier = 0f;
@@ -193,13 +203,13 @@ namespace SimpleNN
         public void SaveToStream(Stream stream)
         {
             stream.Position = 0;
-            JsonSerializer.Serialize(stream, this);
+            JsonSerializer.Serialize(stream, this, serializerOptions);
         }
 
         public static Network LoadFromStream(Stream stream)
         {
             stream.Position = 0;
-            var network = JsonSerializer.Deserialize<Network>(stream);
+            var network = JsonSerializer.Deserialize<Network>(stream, serializerOptions);
             if (network == null)
             {
                 throw new Exception("Failed to read simple neural network from stream");
