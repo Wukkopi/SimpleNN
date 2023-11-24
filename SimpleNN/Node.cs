@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Text;
 
 namespace SimpleNN
 {
@@ -18,15 +19,12 @@ namespace SimpleNN
 
         public Node()
         {
-
-        }
-        public Node(ActivatorType activator)
-        {
-            Activator = activator;
             InNeurons = new List<Neuron>();
             OutNeurons = new List<Neuron>();
             Id = Random.Shared.Next().ToString("X");
         }
+
+        public Node(ActivatorType activator) : this() => Activator = activator;
 
         public void UpdateTriggerValue()
         {
@@ -36,6 +34,25 @@ namespace SimpleNN
                 TriggerValue += n.Weight * n.Parent.ActivatorValue;
             }
             TriggerValue += Bias;
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"Node: {Id}");
+            sb.AppendLine($" - Bias: {Bias:0.###}");
+            sb.AppendLine($" - Activator: {Activator}");
+            sb.AppendLine(" - Neurons In:");
+            foreach (var n in InNeurons)
+            {
+                sb.AppendLine($"   - {n.Id}");
+            }
+            sb.AppendLine(" - Neurons Out:");
+            foreach (var n in OutNeurons)
+            {
+                sb.AppendLine($"   - {n.Id}");
+            }
+            return sb.ToString();
         }
     }
 }

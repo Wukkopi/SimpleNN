@@ -24,6 +24,7 @@ namespace SimpleNN
         public Network()
         {
             nodes = new List<List<Node>>();
+            neurons = new List<Neuron>();
         }
 
         public Network(int layerCount) : this()
@@ -32,8 +33,6 @@ namespace SimpleNN
             {
                 nodes.Add(new List<Node>());
             }
-
-            neurons = new List<Neuron>();
         }
 
         public Network(int[] layers, ActivatorType activator) : this(layers.Length)
@@ -47,20 +46,13 @@ namespace SimpleNN
             }
         }
 
-        public Neuron AddNeuron(Node child, Node parent)
-        {
-            Neuron neuron = new Neuron(parent, child);
-            neurons.Add(neuron);
-            parent.OutNeurons.Add(neuron);
-            child.InNeurons.Add(neuron);
-            return neuron;
-        }
+        public void AddNeuron(Neuron neuron) => neurons.Add(neuron);
         public void RemoveNeuron(Neuron neuron)
         {
+            neuron.Dispose();
             neurons.Remove(neuron);
-            neuron.Parent.OutNeurons.Remove(neuron);
-            neuron.Child.InNeurons.Remove(neuron);
         }
+
         public Node AddNode(int layerIndex, ActivatorType activator, bool autowire = true)
         {
             Node newNode = new Node(activator);
@@ -77,8 +69,6 @@ namespace SimpleNN
                 foreach (Node parent in nodes[layerIndex - 1])
                 {
                     var neuron = new Neuron(parent, newNode);
-                    newNode.InNeurons.Add(neuron);
-                    parent.OutNeurons.Add(neuron);
                     neurons.Add(neuron);
                 }
             }
@@ -89,8 +79,6 @@ namespace SimpleNN
                 foreach (Node child in nodes[layerIndex + 1])
                 {
                     var neuron = new Neuron(newNode, child);
-                    newNode.OutNeurons.Add(neuron);
-                    child.InNeurons.Add(neuron);
                     neurons.Add(neuron);
                 }
             }
@@ -101,13 +89,13 @@ namespace SimpleNN
         {
             if (input.Length != nodes[0].Count)
             {
-                throw new Exception($"Wrong amount of inputs, expected {nodes[0].Count} while got only {input.Length}");
+                throw new Exception($"Wrong amount of inputs. {nodes[0].Count} expected while got {input.Length} inputs");
             }
 
-            // set the input values
+            // set the input values (with input bias intact)
             for (int i = 0; i < nodes[0].Count; i++)
             {
-                nodes[0][i].TriggerValue = input[i];
+                nodes[0][i].TriggerValue = input[i] + nodes[0][i].Bias;
             }
 
             for (int i = 1; i < LayerCount; i++)
@@ -188,16 +176,27 @@ namespace SimpleNN
         public override string ToString()
         {
             var sb = new StringBuilder();
-            foreach (var layer in nodes)
+            sb.AppendLine("============");
+            sb.AppendLine("   Nodes:");
+            sb.AppendLine("============\n");
+            for (var i = 0; i < LayerCount; i++)
             {
-                sb.AppendLine("============");
-                foreach (var node in layer)
+                sb.AppendLine($"Layer: {i} ----->\n");
+                foreach (var node in nodes[i])
                 {
-                    
+                    sb.AppendLine(node.ToString());
                 }
+                sb.AppendLine($"<----- Layer: {i}\n");
+            }
+            sb.AppendLine("============");
+            sb.AppendLine("  Neurons");
+            sb.AppendLine("============\n");
+            foreach (var neuron in neurons)
+            {
+                sb.AppendLine(neuron.ToString());
             }
 
-            return "";
+            return sb.ToString();
         }
 
         public void SaveToStream(Stream stream)
